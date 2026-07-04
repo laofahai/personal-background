@@ -34,13 +34,20 @@ Adapt the command to your agent's MCP registration format if you are not using D
 
 ## Tools
 
+Read tools (Claude/hosts may auto-approve):
+
 - `read_profile` — read `profile.md`
 - `read_preferences` — read `preferences.md`
 - `read_constraints` — read `constraints.md`
-- `list_recent` — list recent episodes or notes, newest first
-- `search_background` — case-insensitive search across all background markdown
-- `add_episode` — add an episode (`YYYY-MM-DD-slug.md`)
-- `add_note` — add a note (`YYYY-MM-DD-slug.md`)
+- `list_recent` — list recent episode/note filenames, newest first
+- `search_background` — case-insensitive search across content, tags, and filenames; returns grouped JSON
+- `read_episode` — read a specific episode by filename
+- `read_note` — read a specific note by filename
+
+Write tools (hosts should confirm):
+
+- `add_episode` — create an episode (`YYYY-MM-DD-slug.md`)
+- `add_note` — create a note (`YYYY-MM-DD-slug.md`)
 - `append_core` — append content to `profile.md`, `preferences.md`, or `constraints.md`
 
 ## Running

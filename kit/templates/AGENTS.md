@@ -30,7 +30,7 @@ Read these files when making decisions that affect the user:
 
 Do not read everything on every request. Match the scope to the question:
 - General advice or planning → read the three core files via `read_profile`, `read_preferences`, `read_constraints`.
-- Recent events or specific topic → use `list_recent` (small `n`) or `search_background` with a focused `query` and `limit`.
+- Recent events or specific topic → use `list_recent` (small `n`) or `search_background` with a focused `query` and `limit`. Then use `read_episode` or `read_note` to fetch the full content of a specific file.
 - Large background with many episodes/notes → prefer `search_background` over broad listing; use `limit` to cap results.
 - When the optional index layer is enabled in the future, use it for semantic retrieval instead of full-file scanning.
 

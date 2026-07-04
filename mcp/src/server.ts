@@ -4,7 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join, resolve } from "path";
-import { createRepo, CoreName, isCoreName } from "./lib.js";
+import { createRepo, CoreName, isCoreName, ENTRY_FILENAME_RE } from "./lib.js";
 
 function loadRepoPath(): string {
   if (process.env.PERSONAL_BACKGROUND_DIR) {
@@ -22,128 +22,258 @@ function loadRepoPath(): string {
 const ROOT = loadRepoPath();
 const repo = createRepo(ROOT);
 
+const INSTRUCTIONS = `
+You are connected to a personal-background MCP server. Use it to read the user's
+profile, preferences, and constraints before making decisions, and to capture
+episodes/notes when the user says something worth remembering.
+
+Read strategy:
+- General advice/planning → call read_profile, read_preferences, read_constraints.
+- Specific recent events or topic → use search_background with a focused query and a small limit.
+- Adding a dated event → use add_episode with filename YYYY-MM-DD-slug.md.
+- Adding an observation/preference → use add_note with filename YYYY-MM-DD-slug.md.
+
+Never read or write files under raw/private/ through this server.
+`.trim();
+
 const server = new Server(
-  { name: "personal-background", version: "2.0.0" },
-  { capabilities: { tools: {} } }
+  {
+    name: "personal-background",
+    version: "2.0.5",
+    description: "MCP bridge for a local-first, markdown-based personal background repository.",
+  },
+  {
+    capabilities: { tools: {} },
+    instructions: INSTRUCTIONS,
+  }
 );
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [
-    { name: "read_profile", description: "Read profile.md", inputSchema: { type: "object", properties: {} } },
-    { name: "read_preferences", description: "Read preferences.md", inputSchema: { type: "object", properties: {} } },
-    { name: "read_constraints", description: "Read constraints.md", inputSchema: { type: "object", properties: {} } },
-    {
-      name: "list_recent",
-      description: "List recent episodes or notes, newest first",
-      inputSchema: {
-        type: "object",
-        properties: { kind: { type: "string", enum: ["episodes", "notes"] }, n: { type: "number" } },
-        required: ["kind"],
-      },
-    },
-    {
-      name: "search_background",
-      description: "Case-insensitive search across background markdown (never searches raw/private). Limit default is 50.",
-      inputSchema: { type: "object", properties: { query: { type: "string" }, limit: { type: "number" } }, required: ["query"] },
-    },
-    {
-      name: "add_episode",
-      description: "Add an episode (filename YYYY-MM-DD-slug.md)",
-      inputSchema: {
-        type: "object",
-        properties: { filename: { type: "string" }, content: { type: "string" } },
-        required: ["filename", "content"],
-      },
-    },
-    {
-      name: "add_note",
-      description: "Add a note (filename YYYY-MM-DD-slug.md)",
-      inputSchema: {
-        type: "object",
-        properties: { filename: { type: "string" }, content: { type: "string" } },
-        required: ["filename", "content"],
-      },
-    },
-    {
-      name: "read_episode",
-      description: "Read a specific episode by filename",
-      inputSchema: {
-        type: "object",
-        properties: { filename: { type: "string" } },
-        required: ["filename"],
-      },
-    },
-    {
-      name: "read_note",
-      description: "Read a specific note by filename",
-      inputSchema: {
-        type: "object",
-        properties: { filename: { type: "string" } },
-        required: ["filename"],
-      },
-    },
-    {
-      name: "append_core",
-      description: "Append content to a core file under a section header",
-      inputSchema: {
-        type: "object",
-        properties: {
-          file: { type: "string", enum: ["profile", "preferences", "constraints"] },
-          content: { type: "string" },
+const readonly = { title: "Read", readOnlyHint: true, idempotentHint: true };
+const write = { title: "Write", readOnlyHint: false, idempotentHint: false };
+const overwrite = { title: "Overwrite", readOnlyHint: false, destructiveHint: true, idempotentHint: false };
+
+const filenameSchema = {
+  type: "string" as const,
+  pattern: "^\\d{4}-\\d{2}-\\d{2}-[a-z0-9-]+\\.md$",
+  description: "Entry filename in YYYY-MM-DD-slug.md format. Lowercase ASCII slug only.",
+};
+
+const tools = [
+  {
+    name: "read_profile",
+    title: "Read profile",
+    description: "Read the user's stable identity from profile.md (education, work, skills, goals, projects).",
+    inputSchema: { type: "object" as const, properties: {} },
+    annotations: readonly,
+  },
+  {
+    name: "read_preferences",
+    title: "Read preferences",
+    description: "Read the user's decision preferences from preferences.md (risk tolerance, values, communication style).",
+    inputSchema: { type: "object" as const, properties: {} },
+    annotations: readonly,
+  },
+  {
+    name: "read_constraints",
+    title: "Read constraints",
+    description: "Read the user's hard constraints from constraints.md (time, budget, geography, family, health, technology).",
+    inputSchema: { type: "object" as const, properties: {} },
+    annotations: readonly,
+  },
+  {
+    name: "list_recent",
+    title: "List recent entries",
+    description: "List the most recent episode or note filenames, newest first. Use before read_episode/read_note if you need a specific filename.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        kind: {
+          type: "string" as const,
+          enum: ["episodes", "notes"],
+          description: "Which folder to list: episodes or notes.",
         },
-        required: ["file", "content"],
+        n: {
+          type: "number" as const,
+          minimum: 1,
+          maximum: 50,
+          default: 10,
+          description: "Number of entries to return (default 10, max 50).",
+        },
       },
+      required: ["kind"],
     },
-  ],
-}));
+    annotations: readonly,
+  },
+  {
+    name: "search_background",
+    title: "Search background",
+    description: "Case-insensitive search across the user's background markdown. Searches file content, frontmatter tags, and filenames. Never searches raw/private/. Cap results with limit to save tokens.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        query: {
+          type: "string" as const,
+          description: "Keywords to search for. Supports plain words, not boolean operators.",
+        },
+        limit: {
+          type: "number" as const,
+          minimum: 1,
+          maximum: 100,
+          default: 50,
+          description: "Maximum number of matching lines to return (default 50, max 100).",
+        },
+      },
+      required: ["query"],
+    },
+    annotations: readonly,
+  },
+  {
+    name: "read_episode",
+    title: "Read episode",
+    description: "Read the full contents of a specific episode by filename. Use list_recent or search_background to discover filenames.",
+    inputSchema: {
+      type: "object" as const,
+      properties: { filename: filenameSchema },
+      required: ["filename"],
+    },
+    annotations: readonly,
+  },
+  {
+    name: "read_note",
+    title: "Read note",
+    description: "Read the full contents of a specific note by filename. Use list_recent or search_background to discover filenames.",
+    inputSchema: {
+      type: "object" as const,
+      properties: { filename: filenameSchema },
+      required: ["filename"],
+    },
+    annotations: readonly,
+  },
+  {
+    name: "add_episode",
+    title: "Add episode",
+    description: "Create a new timestamped episode file. Use this when the user reports a specific event or decision with a date. Does NOT overwrite existing files.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        filename: filenameSchema,
+        content: {
+          type: "string" as const,
+          description: "Full markdown content for the episode, including YAML frontmatter.",
+        },
+      },
+      required: ["filename", "content"],
+    },
+    annotations: write,
+  },
+  {
+    name: "add_note",
+    title: "Add note",
+    description: "Create a new observation or preference note. Use this when the user expresses a preference, insight, or pattern. Does NOT overwrite existing files.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        filename: filenameSchema,
+        content: {
+          type: "string" as const,
+          description: "Full markdown content for the note, including YAML frontmatter.",
+        },
+      },
+      required: ["filename", "content"],
+    },
+    annotations: write,
+  },
+  {
+    name: "append_core",
+    title: "Append to core file",
+    description: "Append content to profile.md, preferences.md, or constraints.md under a section header. This adds text; it does not replace the whole file.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        file: {
+          type: "string" as const,
+          enum: ["profile", "preferences", "constraints"],
+          description: "Which core file to append to.",
+        },
+        content: {
+          type: "string" as const,
+          description: "Markdown text to append. Usually include a section header (e.g. ## Work) and concise bullets.",
+        },
+      },
+      required: ["file", "content"],
+    },
+    annotations: overwrite,
+  },
+];
+
+server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
+
+function ok(data: unknown): { content: Array<{ type: "text"; text: string }> } {
+  return { content: [{ type: "text", text: typeof data === "string" ? data : JSON.stringify(data, null, 2) }] };
+}
+
+function err(message: string): { isError: true; content: Array<{ type: "text"; text: string }> } {
+  return { isError: true, content: [{ type: "text", text: message }] };
+}
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
   const a = (args ?? {}) as Record<string, unknown>;
-  const text = (t: string) => ({ content: [{ type: "text", text: t }] });
-  switch (name) {
-    case "read_profile": return text(repo.readCore("profile"));
-    case "read_preferences": return text(repo.readCore("preferences"));
-    case "read_constraints": return text(repo.readCore("constraints"));
-    case "list_recent":
-      return text(repo.listRecent(a.kind as "episodes" | "notes", (a.n as number) ?? 10).join("\n"));
-    case "search_background": {
-      const hits = repo.searchBackground(a.query as string, a.limit as number | undefined);
-      const grouped = hits.reduce((acc, h) => {
-        acc[h.file] = acc[h.file] || [];
-        acc[h.file].push(h);
-        return acc;
-      }, {} as Record<string, typeof hits>);
-      const out = Object.entries(grouped)
-        .map(([file, lines]) => {
-          const body = lines.map((h) => `  line ${h.line} [${h.matchType}]: ${h.text}`).join("\n");
-          return `${file}:\n${body}`;
-        })
-        .join("\n\n");
-      return text(out || "No matches found.");
-    }
-    case "add_episode":
-      repo.addEntry("episodes", a.filename as string, a.content as string);
-      return text(`Episode ${a.filename} added.`);
-    case "add_note":
-      repo.addEntry("notes", a.filename as string, a.content as string);
-      return text(`Note ${a.filename} added.`);
-    case "read_episode":
-      return text(repo.readEntry("episodes", a.filename as string));
-    case "read_note":
-      return text(repo.readEntry("notes", a.filename as string));
-    case "append_core": {
-      const file = a.file as string;
-      if (!isCoreName(file)) {
-        throw new Error(`Invalid append_core target: ${file}`);
+  try {
+    switch (name) {
+      case "read_profile":
+        return ok(repo.readCore("profile"));
+      case "read_preferences":
+        return ok(repo.readCore("preferences"));
+      case "read_constraints":
+        return ok(repo.readCore("constraints"));
+      case "list_recent":
+        return ok(repo.listRecent(a.kind as "episodes" | "notes", (a.n as number) ?? 10));
+      case "search_background": {
+        const hits = repo.searchBackground(a.query as string, a.limit as number | undefined);
+        const grouped = hits.reduce((acc, h) => {
+          acc[h.file] = acc[h.file] || [];
+          acc[h.file].push(h);
+          return acc;
+        }, {} as Record<string, typeof hits>);
+        const summary = {
+          query: a.query as string,
+          totalHits: hits.length,
+          results: Object.entries(grouped).map(([file, lines]) => ({ file, hits: lines })),
+        };
+        return ok(summary);
       }
-      const p = join(ROOT, `${file}.md`);
-      const prev = existsSync(p) ? readFileSync(p, "utf-8") : "";
-      writeFileSync(p, `${prev}\n\n${a.content as string}\n`, "utf-8");
-      return text(`Appended to ${file}.md.`);
+      case "add_episode": {
+        const filename = a.filename as string;
+        if (!repo.isValidEntryFilename(filename)) return err(`Invalid filename: ${filename}. Must match YYYY-MM-DD-slug.md.`);
+        repo.addEntry("episodes", filename, a.content as string);
+        return ok({ created: `episodes/${filename}` });
+      }
+      case "add_note": {
+        const filename = a.filename as string;
+        if (!repo.isValidEntryFilename(filename)) return err(`Invalid filename: ${filename}. Must match YYYY-MM-DD-slug.md.`);
+        repo.addEntry("notes", filename, a.content as string);
+        return ok({ created: `notes/${filename}` });
+      }
+      case "read_episode":
+        return ok(repo.readEntry("episodes", a.filename as string));
+      case "read_note":
+        return ok(repo.readEntry("notes", a.filename as string));
+      case "append_core": {
+        const file = a.file as string;
+        if (!isCoreName(file)) {
+          return err(`Invalid core file: ${file}. Must be one of: profile, preferences, constraints.`);
+        }
+        const p = join(ROOT, `${file}.md`);
+        const prev = existsSync(p) ? readFileSync(p, "utf-8") : "";
+        writeFileSync(p, `${prev}\n\n${a.content as string}\n`, "utf-8");
+        return ok({ appendedTo: `${file}.md` });
+      }
+      default:
+        return err(`Unknown tool: ${name}`);
     }
-    default:
-      throw new Error(`Unknown tool: ${name}`);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : String(e));
   }
 });
 
