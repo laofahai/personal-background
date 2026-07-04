@@ -33,7 +33,12 @@ user-invocable: true
 1. Identify empty or placeholder sections in the core files. Markers include `_to fill_`, blank bullets, or sections with only headers.
 2. Pick one high-priority section to start with. Recommended order: Identity → Work → Goals → Preferences → Constraints.
 3. Ask the user a focused, conversational question to fill that section.
-4. If the user mentions an external entity (company, school, product, project, certification, etc.) and you can improve accuracy with public facts, **offer** to search for publicly available information about it (e.g. full legal name of a company, official school name, public project URL). Only do this if the user agrees; never search for private personal details.
+4. If the user mentions an external entity that could be enriched with public facts, **offer** to search for publicly available information about it. Examples include:
+   - Organizations: companies, schools, research labs, nonprofits
+   - Credentials: certifications, degrees, licenses, awards
+   - Work outputs: products, projects, open-source repos, papers, talks
+   - Public identity links: blogs, personal websites, GitHub, LinkedIn, portfolio, social profiles, newsletters
+   Only do this if the user agrees; never search for private personal details, private accounts, or anything the user has not already mentioned publicly.
 5. If the user gives a detailed story or event, propose creating an `episodes/` file plus a concise summary in the core file.
 6. If the user gives a preference or observation, propose updating `preferences.md` or creating a `notes/` file.
 7. Present the proposed changes and wait for explicit confirmation before writing.

@@ -1,8 +1,12 @@
 # Manifest for the personal-background kit.
 # The upgrade skill compares kit_version here (upstream) against
 # .pbg/settings.yml kit_version (installed) to decide what to merge.
-kit_version: "2.0.2"
+kit_version: "2.0.3"
 changelog:
+  - version: "2.0.3"
+    date: "2026-07-04"
+    notes:
+      - "complete-profile entity search now explicitly covers public identity links (blog, GitHub, portfolio, etc.)."
   - version: "2.0.2"
     date: "2026-07-04"
     notes:
