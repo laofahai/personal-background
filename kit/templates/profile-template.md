@@ -45,6 +45,14 @@ Stable identity: education, work, skills, goals, projects.
 - Completed:
 - Want to start:
 
+## Online Presence
+
+- Blog:
+- Personal website:
+- GitHub:
+- LinkedIn:
+- Portfolio / other public profiles:
+
 ## Relationships
 
 - Important collaborators or network:

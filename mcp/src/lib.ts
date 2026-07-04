@@ -10,13 +10,17 @@ export function isCoreName(name: string): name is CoreName {
 
 export interface SearchHit { file: string; line: number; text: string; }
 
+export const ENTRY_FILENAME_RE = /^\d{4}-\d{2}-\d{2}-[a-z0-9-]+\.md$/;
+
 export interface Repo {
   root: string;
   readCore(name: CoreName): string;
+  readEntry(kind: "episodes" | "notes", filename: string): string;
   listRecent(kind: "episodes" | "notes", n: number): string[];
   searchBackground(query: string): SearchHit[];
   addEntry(kind: "episodes" | "notes", filename: string, content: string): void;
   isPrivatePath(rel: string): boolean;
+  isValidEntryFilename(filename: string): boolean;
 }
 
 export function createRepo(rootInput: string): Repo {
@@ -29,6 +33,19 @@ export function createRepo(rootInput: string): Repo {
 
   const readCore = (name: CoreName): string => {
     const p = join(root, `${name}.md`);
+    return existsSync(p) ? readFileSync(p, "utf-8") : "";
+  };
+
+  const isValidEntryFilename = (filename: string): boolean => {
+    if (filename.includes("/") || filename.includes("\\") || filename.includes("..")) return false;
+    return ENTRY_FILENAME_RE.test(filename);
+  };
+
+  const readEntry = (kind: "episodes" | "notes", filename: string): string => {
+    if (!isValidEntryFilename(filename)) {
+      throw new Error(`Invalid entry filename: ${filename}`);
+    }
+    const p = join(root, kind, filename);
     return existsSync(p) ? readFileSync(p, "utf-8") : "";
   };
 
@@ -69,10 +86,13 @@ export function createRepo(rootInput: string): Repo {
   };
 
   const addEntry = (kind: "episodes" | "notes", filename: string, content: string): void => {
+    if (!isValidEntryFilename(filename)) {
+      throw new Error(`Invalid entry filename: ${filename}`);
+    }
     const dir = join(root, kind);
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, filename), content, "utf-8");
   };
 
-  return { root, readCore, listRecent, searchBackground, addEntry, isPrivatePath };
+  return { root, readCore, readEntry, listRecent, searchBackground, addEntry, isPrivatePath, isValidEntryFilename };
 }

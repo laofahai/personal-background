@@ -6,9 +6,20 @@ import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join, resolve } from "path";
 import { createRepo, CoreName, isCoreName } from "./lib.js";
 
-const ROOT = process.env.PERSONAL_BACKGROUND_DIR
-  ? resolve(process.env.PERSONAL_BACKGROUND_DIR)
-  : resolve(process.env.HOME || ".", "personal-background");
+function loadRepoPath(): string {
+  if (process.env.PERSONAL_BACKGROUND_DIR) {
+    return resolve(process.env.PERSONAL_BACKGROUND_DIR);
+  }
+  const settingsPath = resolve(process.env.HOME || ".", "personal-background", ".pbg", "settings.yml");
+  if (existsSync(settingsPath)) {
+    const content = readFileSync(settingsPath, "utf-8");
+    const match = content.match(/^repo_path:\s*(.+)$/m);
+    if (match) return resolve(match[1].trim());
+  }
+  return resolve(process.env.HOME || ".", "personal-background");
+}
+
+const ROOT = loadRepoPath();
 const repo = createRepo(ROOT);
 
 const server = new Server(
@@ -54,6 +65,24 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: "read_episode",
+      description: "Read a specific episode by filename",
+      inputSchema: {
+        type: "object",
+        properties: { filename: { type: "string" } },
+        required: ["filename"],
+      },
+    },
+    {
+      name: "read_note",
+      description: "Read a specific note by filename",
+      inputSchema: {
+        type: "object",
+        properties: { filename: { type: "string" } },
+        required: ["filename"],
+      },
+    },
+    {
       name: "append_core",
       description: "Append content to a core file under a section header",
       inputSchema: {
@@ -88,6 +117,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case "add_note":
       repo.addEntry("notes", a.filename as string, a.content as string);
       return text(`Note ${a.filename} added.`);
+    case "read_episode":
+      return text(repo.readEntry("episodes", a.filename as string));
+    case "read_note":
+      return text(repo.readEntry("notes", a.filename as string));
     case "append_core": {
       const file = a.file as string;
       if (!isCoreName(file)) {

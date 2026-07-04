@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync, readFileSync, existsSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { createRepo, isCoreName, CORE_NAMES } from "../src/lib.js";
+import { createRepo, isCoreName, CORE_NAMES, ENTRY_FILENAME_RE } from "../src/lib.js";
 
 let root: string;
 beforeEach(() => {
@@ -52,5 +52,27 @@ describe("isCoreName", () => {
   });
   it("CORE_NAMES matches the exported values", () => {
     expect(CORE_NAMES).toEqual(["profile", "preferences", "constraints"]);
+  });
+});
+
+describe("Entry filename validation", () => {
+  it("accepts valid YYYY-MM-DD-slug.md names", () => {
+    expect(ENTRY_FILENAME_RE.test("2026-07-04-new-job.md")).toBe(true);
+    expect(ENTRY_FILENAME_RE.test("2026-07-04-x.md")).toBe(true);
+  });
+  it("rejects path traversal", () => {
+    const r = createRepo(root);
+    expect(() => r.addEntry("episodes", "../raw/private/x.md", "hacked")).toThrow();
+    expect(() => r.addEntry("notes", "x/../y.md", "hacked")).toThrow();
+  });
+  it("rejects invalid entry filenames", () => {
+    const r = createRepo(root);
+    expect(() => r.addEntry("episodes", "invalid.md", "bad")).toThrow();
+    expect(() => r.addEntry("episodes", "2026-07-04 no spaces.md", "bad")).toThrow();
+    expect(() => r.addEntry("notes", "2026-07-04-UPPER.md", "bad")).toThrow();
+  });
+  it("reads a specific entry", () => {
+    const r = createRepo(root);
+    expect(r.readEntry("episodes", "2026-01-01-a.md")).toContain("company B");
   });
 });
