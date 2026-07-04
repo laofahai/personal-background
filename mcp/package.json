@@ -1,14 +1,12 @@
 {
   "name": "personal-background-mcp",
-  "version": "1.0.0",
-  "description": "Optional MCP server for the personal-background markdown repository",
+  "version": "2.0.0",
+  "description": "MCP bridge for the personal-background markdown data home",
   "type": "module",
-  "bin": {
-    "personal-background-mcp": "./dist/server.js"
-  },
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "bun run src/server.ts",
+    "typecheck": "bunx tsc --noEmit",
+    "test": "bun test"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0"
