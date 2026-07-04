@@ -1,0 +1,7 @@
+# Copied to .pbg/settings.yml during bootstrap, then filled in.
+# .pbg/ is user-owned and gitignored.
+preferred_language: "en"        # e.g. en, zh, ja - used for all user-data writes
+repo_path: ""                   # absolute path to this repo (the data home)
+kit_version: "2.0.0"            # set to kit/manifest.yml kit_version at install time
+index:
+  enabled: false                # optional regenerable index (vector/graph); off by default
