@@ -1,0 +1,32 @@
+# Private raw materials
+raw/private/
+*.key
+*.pem
+.env
+
+# Local agent settings
+CLAUDE.local.md
+.agent-local.md
+.cursor-local.md
+.codex-local.md
+
+# OS and editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# MCP dependencies
+mcp/node_modules/
+mcp/dist/
+mcp/.env
+
+# Scripts artifacts
+__pycache__/
+*.pyc
+*.pyo
+
+# Archives (optional)
+archive/

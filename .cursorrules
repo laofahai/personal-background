@@ -1,0 +1,13 @@
+# Cursor Rules for personal-background
+
+This is the user's personal background repository. It contains a unified, local-first, markdown-based knowledge base at `~/Documents/workspace/personal-background/`.
+
+When helping this user, reference:
+
+- `profile.md` — stable identity: education, work, skills, goals, projects
+- `preferences.md` — decision preferences: risk tolerance, values, communication style
+- `constraints.md` — hard constraints: geography, budget, time, family, health, technology
+- `episodes/` — timestamped experiences
+- `notes/` — free observations and distilled preferences
+
+Respect privacy boundaries. Never upload or reference files in `raw/private/` unless explicitly asked.
