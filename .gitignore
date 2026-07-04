@@ -30,3 +30,9 @@ __pycache__/
 
 # Archives (optional)
 archive/
+
+# Local runtime config and regenerable artifacts
+.pbg/
+index/
+raw/private/
+mcp/node_modules/
