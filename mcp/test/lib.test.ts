@@ -29,6 +29,17 @@ describe("Repo", () => {
     expect(hits.some((h) => h.file.includes("2026-01-01-a.md"))).toBe(true);
     expect(hits.some((h) => h.file.includes("private"))).toBe(false);
   });
+  it("limits search results", () => {
+    const hits = createRepo(root).searchBackground("company B", 1);
+    expect(hits.length).toBe(1);
+  });
+  it("matches frontmatter tags and filenames", () => {
+    writeFileSync(join(root, "notes", "2026-03-01-tagged.md"), "---\ndate: 2026-03-01\ntags: [ai, career]\n---\nAI tooling note.");
+    const tagHits = createRepo(root).searchBackground("career");
+    expect(tagHits.some((h) => h.matchType === "tag")).toBe(true);
+    const fileHits = createRepo(root).searchBackground("2026-03-01-tagged");
+    expect(fileHits.some((h) => h.matchType === "filename")).toBe(true);
+  });
   it("adds an entry", () => {
     createRepo(root).addEntry("notes", "2026-03-01-x.md", "prefers tests first");
     expect(readFileSync(join(root, "notes", "2026-03-01-x.md"), "utf-8")).toContain("tests first");

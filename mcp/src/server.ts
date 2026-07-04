@@ -43,8 +43,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "search_background",
-      description: "Case-insensitive search across background markdown (never searches raw/private)",
-      inputSchema: { type: "object", properties: { query: { type: "string" } }, required: ["query"] },
+      description: "Case-insensitive search across background markdown (never searches raw/private). Limit default is 50.",
+      inputSchema: { type: "object", properties: { query: { type: "string" }, limit: { type: "number" } }, required: ["query"] },
     },
     {
       name: "add_episode",
@@ -107,10 +107,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case "read_constraints": return text(repo.readCore("constraints"));
     case "list_recent":
       return text(repo.listRecent(a.kind as "episodes" | "notes", (a.n as number) ?? 10).join("\n"));
-    case "search_background":
-      return text(
-        repo.searchBackground(a.query as string).map((h) => `${h.file}:${h.line}: ${h.text}`).join("\n")
-      );
+    case "search_background": {
+      const hits = repo.searchBackground(a.query as string, a.limit as number | undefined);
+      const grouped = hits.reduce((acc, h) => {
+        acc[h.file] = acc[h.file] || [];
+        acc[h.file].push(h);
+        return acc;
+      }, {} as Record<string, typeof hits>);
+      const out = Object.entries(grouped)
+        .map(([file, lines]) => {
+          const body = lines.map((h) => `  line ${h.line} [${h.matchType}]: ${h.text}`).join("\n");
+          return `${file}:\n${body}`;
+        })
+        .join("\n\n");
+      return text(out || "No matches found.");
+    }
     case "add_episode":
       repo.addEntry("episodes", a.filename as string, a.content as string);
       return text(`Episode ${a.filename} added.`);

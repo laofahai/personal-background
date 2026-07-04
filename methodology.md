@@ -169,4 +169,4 @@ Markdown is the only source of truth; both surfaces are views over it.
 
 ### Upgrades
 
-The repo is both a kit and a data home. Framework-owned files (`kit/`, `bootstrap/`, `mcp/`, `AGENTS.md`, `README.md`, `methodology.md`, `docs/`, `LICENSE`) can be updated from upstream, but user-owned files (`profile.md`, `preferences.md`, `constraints.md`, `episodes/`, `notes/`, `raw/`, `archive/`, `.pbg/`, `index/`) must never be overwritten automatically. Use the `upgrade` skill for a consent-gated, reasoned merge of framework-owned files only.
+The repo is both a kit and a data home. Framework-owned files (`kit/`, `bootstrap/`, `mcp/`, `README.md`, `methodology.md`, `docs/`, `LICENSE`) can be updated from upstream, but user-owned files (`AGENTS.md`, `profile.md`, `preferences.md`, `constraints.md`, `episodes/`, `notes/`, `raw/`, `archive/`, `.pbg/`, `index/`) must never be overwritten automatically. Use the `upgrade` skill for a consent-gated, reasoned merge of framework-owned files only.

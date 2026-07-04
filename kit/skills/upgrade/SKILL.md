@@ -11,8 +11,8 @@ The repo is both a kit and the user's data home. A plain `git pull` would entang
 ## Absolute rules
 
 - **User consent is mandatory.** Upgrades are user-initiated (never automatic). Nothing is written until the user explicitly approves the merge plan.
-- **Only framework-owned paths may change:** `kit/`, `mcp/`, `methodology.md`, `bootstrap/`, `AGENTS.md`, `README.md`, `docs/`, `LICENSE`.
-- **Never touch user-owned paths:** `profile.md`, `preferences.md`, `constraints.md`, `episodes/`, `notes/`, `raw/`, `archive/`, `index/`.
+- **Only framework-owned paths may change:** `kit/`, `mcp/`, `methodology.md`, `bootstrap/`, `README.md`, `README.zh.md`, `docs/`, `LICENSE`.
+- **Never touch user-owned paths:** `AGENTS.md`, `profile.md`, `preferences.md`, `constraints.md`, `episodes/`, `notes/`, `raw/`, `archive/`, `index/`.
 - **Exception for `.pbg/settings.yml`:** during an approved upgrade, the skill may write only the `kit_version` field into `.pbg/settings.yml` (no other user-owned fields).
 
 ## Repo path
@@ -24,7 +24,7 @@ The repo is both a kit and the user's data home. A plain `git pull` would entang
 1. Determine the upstream source: prefer a git remote named `upstream`; if absent, ask the user for the upstream repo URL and add it (`git remote add upstream <url>`).
 2. Fetch upstream without merging: `git fetch upstream`.
 3. Read installed version (`.pbg/settings.yml` `kit_version`) and upstream version (`upstream/main:kit/manifest.yml` `kit_version`). If equal, report "already up to date" and stop.
-4. Compute the changed framework-owned files between installed state and upstream (e.g. `git diff --name-only HEAD upstream/main -- kit/ mcp/ methodology.md bootstrap/ AGENTS.md README.md docs/ LICENSE`).
+4. Compute the changed framework-owned files between installed state and upstream (e.g. `git diff --name-only HEAD upstream/main -- kit/ mcp/ methodology.md bootstrap/ README.md README.zh.md docs/ LICENSE`).
 5. Build a merge plan classifying each changed file as:
    - **New** (exists upstream, not locally) → will be added.
    - **Clean update** (user did not customize locally) → will be replaced with upstream.

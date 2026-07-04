@@ -23,11 +23,11 @@ personal-background/
 ├── bootstrap/              # 权威的 bootstrap 提示词
 ├── mcp/                    # 一等 MCP 桥（通过 bun 直接运行 TS）
 │
-├── AGENTS.md               # 跨 agent 入口
 ├── methodology.md          # 背景管理方法论
 ├── README.md / README.zh.md
 ├── LICENSE
 │
+├── AGENTS.md               # 跨 agent 入口（由 bootstrap 从 kit/templates/AGENTS.md 生成；用户所有）
 ├── profile.md              # 稳定身份（用户所有）
 ├── preferences.md          # 决策偏好（用户所有）
 ├── constraints.md          # 硬性约束（用户所有）
@@ -45,10 +45,11 @@ personal-background/
 框架所有文件（由套件读取和更新，不保存用户个人数据）：
 
 - `kit/`、`bootstrap/`、`mcp/`
-- `AGENTS.md`、`README.md`、`README.zh.md`、`methodology.md`、`docs/`、`LICENSE`
+- `README.md`、`README.zh.md`、`methodology.md`、`docs/`、`LICENSE`
 
 用户所有文件（任何工具都不会覆盖，除非你明确同意）：
 
+- `AGENTS.md`（由 bootstrap 从 `kit/templates/AGENTS.md` 生成；可安全编辑）
 - `profile.md`、`preferences.md`、`constraints.md`
 - `episodes/`、`notes/`、`raw/`、`archive/`
 - `.pbg/`、`index/`
