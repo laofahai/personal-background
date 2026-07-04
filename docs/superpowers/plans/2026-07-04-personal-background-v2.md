@@ -6,7 +6,7 @@
 
 **Architecture:** The repo is both a kit and the user's git-synced markdown data home. A bootstrap prompt (pasted into the user's agent) scaffolds data files, installs skills into the agent skill dir, and registers the MCP server, all pointing at the repo path. Markdown is the only source of truth; the MCP server and skills are two access surfaces over it.
 
-**Tech Stack:** Markdown + YAML frontmatter (data & skills), TypeScript + `@modelcontextprotocol/sdk` (MCP server, stdio), Node 20, `vitest` (MCP tests).
+**Tech Stack:** Markdown + YAML frontmatter (data & skills), TypeScript + `@modelcontextprotocol/sdk` (MCP server, stdio), **Bun 1.3+** as runtime/package-manager/test-runner (runs TS directly, no build step), `bun:test` for MCP tests.
 
 ## Global Constraints
 
@@ -16,7 +16,7 @@
 - `raw/private/` is never read, written, or referenced by the MCP server.
 - Filenames for episodes/notes: `YYYY-MM-DD-slug.md`, lowercase ASCII slug.
 - Markdown stays 100% portable (standard YAML frontmatter, no tool-specific syntax). No third-party integration code in the repo.
-- Node 20, `"type": "module"`, MCP SDK `^1.0.0`.
+- Bun 1.3+ (`bun install`, `bun test`, `bun run src/server.ts`); `"type": "module"`; MCP SDK `^1.0.0`. No `tsc` build/`dist/` — the server runs TS directly via bun.
 - Frequent commits: one commit per completed task.
 
 ---
@@ -146,7 +146,6 @@ Append if absent:
 index/
 raw/private/
 mcp/node_modules/
-mcp/dist/
 ```
 
 - [ ] **Step 2: Verify**
@@ -418,7 +417,6 @@ Refactor the existing `mcp/` into a testable `lib.ts` (pure functions over a rep
 **Files:**
 - Modify: `mcp/package.json`
 - Create: `mcp/src/lib.ts`
-- Create: `mcp/vitest.config.ts`
 - Create: `mcp/test/lib.test.ts`
 
 **Interfaces:**
@@ -430,37 +428,35 @@ Refactor the existing `mcp/` into a testable `lib.ts` (pure functions over a rep
   - `Repo.addEntry(kind: "episodes"|"notes", filename: string, content: string): void`
   - `Repo.isPrivatePath(rel: string): boolean`
 
-- [ ] **Step 1: Add vitest to `mcp/package.json`**
+- [ ] **Step 1: Update `mcp/package.json` for bun (no build/dist, bun test)**
 
-Set `devDependencies` to include vitest and add scripts:
 ```json
 {
+  "name": "personal-background-mcp",
+  "version": "2.0.0",
+  "description": "MCP bridge for the personal-background markdown data home",
+  "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "test": "vitest run"
+    "start": "bun run src/server.ts",
+    "typecheck": "bunx tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
-    "vitest": "^2.0.0"
+    "typescript": "^5.0.0"
   }
 }
 ```
-Run: `cd mcp && npm install`
-Expected: vitest installed.
+Run: `cd mcp && rm -f package-lock.json && bun install`
+Expected: `bun.lock` produced, deps installed. (Remove the old npm lockfile since bun manages deps now.)
 
-- [ ] **Step 2: Create `mcp/vitest.config.ts`**
-
-```typescript
-import { defineConfig } from "vitest/config";
-export default defineConfig({ test: { environment: "node" } });
-```
-
-- [ ] **Step 3: Write the failing test `mcp/test/lib.test.ts`**
+- [ ] **Step 2: Write the failing test `mcp/test/lib.test.ts`**
 
 ```typescript
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync, readFileSync, existsSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -502,12 +498,12 @@ describe("Repo", () => {
 });
 ```
 
-- [ ] **Step 4: Run the test to confirm it fails**
+- [ ] **Step 3: Run the test to confirm it fails**
 
-Run: `cd mcp && npm test`
+Run: `cd mcp && bun test`
 Expected: FAIL - cannot import `createRepo` from `../src/lib.js`.
 
-- [ ] **Step 5: Implement `mcp/src/lib.ts`**
+- [ ] **Step 4: Implement `mcp/src/lib.ts`**
 
 ```typescript
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from "fs";
@@ -611,7 +607,7 @@ git commit -m "feat(mcp): extract testable lib with search and private guard"
 - [ ] **Step 1: Rewrite `mcp/src/server.ts`**
 
 ```typescript
-#!/usr/bin/env node
+#!/usr/bin/env bun
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
@@ -719,19 +715,19 @@ async function main() {
 main().catch((e) => { console.error(e); process.exit(1); });
 ```
 
-- [ ] **Step 2: Build to verify types**
+- [ ] **Step 2: Typecheck (no emit, no dist)**
 
-Run: `cd mcp && npm run build`
-Expected: `dist/server.js` and `dist/lib.js` produced, no TS errors.
+Run: `cd mcp && bun run typecheck`
+Expected: no TS errors. (There is no build step; the server runs TS directly via bun.)
 
 - [ ] **Step 3: Re-run tests**
 
-Run: `cd mcp && npm test`
+Run: `cd mcp && bun test`
 Expected: PASS.
 
 - [ ] **Step 4: Update `mcp/README.md`**
 
-Document: purpose (daily cross-project bridge), `PERSONAL_BACKGROUND_DIR` env, the tool list, and the registration command `droid mcp add personal-background -- node <repo>/mcp/dist/server.js` (with env). State clearly it never reads `raw/private/`.
+Document: purpose (daily cross-project bridge), `PERSONAL_BACKGROUND_DIR` env, the tool list, and the registration command `droid mcp add personal-background --env PERSONAL_BACKGROUND_DIR=<repo> -- bun <repo>/mcp/src/server.ts` (runs TS directly, no build). State clearly it never reads `raw/private/`.
 
 - [ ] **Step 5: Commit**
 
@@ -775,9 +771,9 @@ git-synced markdown data home. Do the following, asking me for confirmation befo
    `kit/skills/*/SKILL.md` into this agent's skill directory. Where a skill references
    the repo path, it reads `.pbg/settings.yml` `repo_path`, so no path hardcoding is needed.
 5. Register the MCP server so I can read/write my background from ANY project:
-   - Build it: `cd mcp && npm install && npm run build`
+   - Install deps: `cd mcp && bun install` (no build step; bun runs the TS server directly)
    - Register with env `PERSONAL_BACKGROUND_DIR=<repo_path>` pointing to this repo, e.g.
-     `droid mcp add personal-background --env PERSONAL_BACKGROUND_DIR=<repo_path> -- node <repo_path>/mcp/dist/server.js`
+     `droid mcp add personal-background --env PERSONAL_BACKGROUND_DIR=<repo_path> -- bun <repo_path>/mcp/src/server.ts`
    - Adapt the command to my actual agent if different.
 6. Tell me I can now either run the `complete-profile` skill for guided onboarding, or
    just talk to you and say "remember this" to capture episodes/notes.
@@ -848,7 +844,7 @@ Expected: prints `ok scaffolded`.
 
 Run:
 ```bash
-cd mcp && npm run build && PERSONAL_BACKGROUND_DIR="$tmp" node -e "import('./dist/lib.js').then(m=>{const r=m.createRepo(process.env.PERSONAL_BACKGROUND_DIR);r.addEntry('episodes','2026-07-04-x.md','launched project X');console.log('search:',JSON.stringify(r.searchBackground('project X')));console.log('private:',r.isPrivatePath('raw/private/x.md'));})"
+cd mcp && PERSONAL_BACKGROUND_DIR="$tmp" bun -e "import('./src/lib.ts').then(m=>{const r=m.createRepo(process.env.PERSONAL_BACKGROUND_DIR);r.addEntry('episodes','2026-07-04-x.md','launched project X');console.log('search:',JSON.stringify(r.searchBackground('project X')));console.log('private:',r.isPrivatePath('raw/private/x.md'));})"
 ```
 Expected: search returns the episode hit; `private: true`; no `raw/private` in results.
 
@@ -865,10 +861,11 @@ Expected: each shows `name:`, `description:`, `user-invocable: true`.
 Run: `rm -rf "$tmp" && echo cleaned`
 Expected: `cleaned`.
 
-- [ ] **Step 5: Final commit (if any doc tweaks were needed)**
+- [ ] **Step 5: Final commit (only if this task changed tracked plan/framework files)**
 
+Do NOT use `git add -A`. Stage only specific files you changed in this task (e.g. a doc fix), then:
 ```bash
-git add -A && git commit -m "test: end-to-end bootstrap + mcp dry-run verified" || echo "nothing to commit"
+git commit -m "test: end-to-end bootstrap + mcp dry-run verified" || echo "nothing to commit"
 ```
 
 ---
