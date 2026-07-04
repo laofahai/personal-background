@@ -20,7 +20,7 @@ AI agent 每次对话都从零开始。这导致重复提问、建议过于 gene
 - **本地优先**：纯 markdown + YAML frontmatter，不依赖数据库或向量存储。
 - **隐私友好**：敏感资料放在 `raw/private/`，默认 gitignore。
 - **统一核心**：`profile.md`、`preferences.md`、`constraints.md` 是稳定的事实来源；`episodes/` 和 `notes/` 记录事件和观察。
-- **AI 驱动维护**：Factory Droid 技能（`personal-profile`、`reflect`、`setup-agent`）帮助更新内容。
+- **AI 驱动维护**：Factory Droid 技能（`complete-profile`、`personal-profile`、`reflect`、`setup-agent`）帮助创建、更新、合并和迁移个人背景。
 - **跨 agent**：`AGENTS.md` 和 `CLAUDE.md` 可被 Claude、Codex 等兼容 agent 读取。
 
 ## 仓库结构
@@ -45,6 +45,10 @@ personal-background/
 ├── archive/                  # 归档过时条目
 │
 ├── .factory/skills/          # Factory Droid 技能
+│   ├── complete-profile/     # 引导式 onboarding / 补全资料
+│   ├── personal-profile/     # 更新个人背景
+│   ├── reflect/              # 合并 episodes/notes 到核心
+│   └── setup-agent/          # 生成其他 agent 的适配文件
 ├── scripts/                  # 辅助脚本
 ├── hooks/                    # 可选 Claude Code hook
 └── mcp/                      # 可选 MCP server

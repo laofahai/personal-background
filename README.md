@@ -20,7 +20,7 @@ AI agents start every conversation with no memory. This leads to repeated questi
 - **Local-first**: plain markdown + YAML frontmatter, no database or vector store required.
 - **Privacy-friendly**: sensitive materials go to `raw/private/` and are gitignored by default.
 - **Unified core**: `profile.md`, `preferences.md`, and `constraints.md` are the stable source of truth; `episodes/` and `notes/` capture events and observations.
-- **AI-driven maintenance**: Factory Droid skills (`personal-profile`, `reflect`, `setup-agent`) help you keep everything up to date.
+- **AI-driven maintenance**: Factory Droid skills (`complete-profile`, `personal-profile`, `reflect`, `setup-agent`) help you create, update, consolidate, and port your background.
 - **Cross-agent**: `AGENTS.md` and `CLAUDE.md` are read by Claude, Codex, and other compatible agents.
 
 ## Repository Structure
@@ -45,6 +45,10 @@ personal-background/
 ├── archive/                  # Archive for outdated entries
 │
 ├── .factory/skills/          # Factory Droid skills
+│   ├── complete-profile/     # Guided onboarding / profile completion
+│   ├── personal-profile/     # Update personal background
+│   ├── reflect/              # Merge episodes/notes into core
+│   └── setup-agent/          # Generate adapter files for other agents
 ├── scripts/                  # Helper scripts
 ├── hooks/                    # Optional Claude Code hook
 └── mcp/                      # Optional MCP server
