@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync, readFileSync, existsSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { createRepo } from "../src/lib.js";
+import { createRepo, isCoreName, CORE_NAMES } from "../src/lib.js";
 
 let root: string;
 beforeEach(() => {
@@ -36,5 +36,21 @@ describe("Repo", () => {
   it("flags private paths", () => {
     expect(createRepo(root).isPrivatePath("raw/private/secret.md")).toBe(true);
     expect(createRepo(root).isPrivatePath("episodes/x.md")).toBe(false);
+  });
+});
+
+describe("isCoreName", () => {
+  it("accepts the three core names", () => {
+    expect(isCoreName("profile")).toBe(true);
+    expect(isCoreName("preferences")).toBe(true);
+    expect(isCoreName("constraints")).toBe(true);
+  });
+  it("rejects path traversal and invalid names", () => {
+    expect(isCoreName("../raw/private/secret")).toBe(false);
+    expect(isCoreName("raw/private/x")).toBe(false);
+    expect(isCoreName("profile\nfoo")).toBe(false);
+  });
+  it("CORE_NAMES matches the exported values", () => {
+    expect(CORE_NAMES).toEqual(["profile", "preferences", "constraints"]);
   });
 });

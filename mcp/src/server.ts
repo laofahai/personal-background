@@ -4,7 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join, resolve } from "path";
-import { createRepo, CoreName } from "./lib.js";
+import { createRepo, CoreName, isCoreName } from "./lib.js";
 
 const ROOT = process.env.PERSONAL_BACKGROUND_DIR
   ? resolve(process.env.PERSONAL_BACKGROUND_DIR)
@@ -89,7 +89,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       repo.addEntry("notes", a.filename as string, a.content as string);
       return text(`Note ${a.filename} added.`);
     case "append_core": {
-      const file = a.file as CoreName;
+      const file = a.file as string;
+      if (!isCoreName(file)) {
+        throw new Error(`Invalid append_core target: ${file}`);
+      }
       const p = join(ROOT, `${file}.md`);
       const prev = existsSync(p) ? readFileSync(p, "utf-8") : "";
       writeFileSync(p, `${prev}\n\n${a.content as string}\n`, "utf-8");

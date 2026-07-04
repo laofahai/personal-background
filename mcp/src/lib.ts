@@ -3,6 +3,10 @@ import { join, resolve, relative, sep } from "path";
 
 const CORE = ["profile", "preferences", "constraints"] as const;
 export type CoreName = (typeof CORE)[number];
+export const CORE_NAMES: readonly CoreName[] = CORE;
+export function isCoreName(name: string): name is CoreName {
+  return (CORE as readonly string[]).includes(name);
+}
 
 export interface SearchHit { file: string; line: number; text: string; }
 
