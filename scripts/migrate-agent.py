@@ -66,7 +66,7 @@ Respect privacy boundaries. Do not upload `raw/private/` to any cloud service.
 def generate_copilot() -> str:
     return """# GitHub Copilot Instructions
 
-The user maintains a personal background repository at `~/Documents/workspace/personal-background/` with `profile.md`, `preferences.md`, `constraints.md`, `episodes/`, and `notes/`.
+The user maintains a personal background repository with `profile.md`, `preferences.md`, `constraints.md`, `episodes/`, and `notes/`.
 
 When suggesting code, plans, or decisions, reference this context to align with the user's identity, preferences, and constraints.
 

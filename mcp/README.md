@@ -23,9 +23,9 @@ Add to your Claude Desktop config:
   "mcpServers": {
     "personal-background": {
       "command": "node",
-      "args": ["/Users/laofahai/Documents/workspace/personal-background/mcp/dist/server.js"],
+      "args": ["/path/to/personal-background/mcp/dist/server.js"],
       "env": {
-        "PERSONAL_BACKGROUND_DIR": "/Users/laofahai/Documents/workspace/personal-background"
+        "PERSONAL_BACKGROUND_DIR": "/path/to/personal-background"
       }
     }
   }

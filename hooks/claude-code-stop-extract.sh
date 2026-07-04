@@ -11,7 +11,7 @@
 #         "hooks": [
 #           {
 #             "type": "command",
-#             "command": "bash /Users/laofahai/Documents/workspace/personal-background/hooks/claude-code-stop-extract.sh"
+#             "command": "bash /path/to/personal-background/hooks/claude-code-stop-extract.sh"
 #           }
 #         ]
 #       }

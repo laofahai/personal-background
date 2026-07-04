@@ -1,6 +1,6 @@
 # GitHub Copilot Instructions
 
-The user maintains a personal background repository at `~/Documents/workspace/personal-background/`.
+The user maintains a personal background repository (wherever they cloned this project).
 
 When suggesting code, plans, or decisions, reference this context to align with the user's identity, preferences, and constraints.
 

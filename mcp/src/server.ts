@@ -12,7 +12,7 @@ import { join, resolve } from "path";
 
 const REPO = process.env.PERSONAL_BACKGROUND_DIR
   ? resolve(process.env.PERSONAL_BACKGROUND_DIR)
-  : resolve(process.env.HOME || "~", "Documents/workspace/personal-background");
+  : resolve(process.env.HOME || "~", "personal-background");
 
 const CORE_FILES = {
   profile: join(REPO, "profile.md"),

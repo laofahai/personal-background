@@ -67,7 +67,7 @@ Generate agent-specific adapter files from the unified personal background core.
 ### Copilot (`.github/copilot-instructions.md`)
 
 - Write standard markdown instructions.
-- Mention that the user has a personal background repo at `~/Documents/workspace/personal-background/` and Copilot should reference it when relevant.
+- Mention that the user has a personal background repo wherever they cloned it, and Copilot should reference it when relevant.
 
 ## Important
 
