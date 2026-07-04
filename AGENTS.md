@@ -31,8 +31,27 @@ Read these files when making decisions that affect the user:
 - For significant updates to stable identity or preferences, use the `personal-profile` workflow.
 - Periodically run the `reflect` workflow to merge recurring patterns from `episodes/` and `notes/` into `profile.md` and `preferences.md`.
 
+## Access surfaces
+
+- **Skills** live in `kit/skills/` and are installed by the bootstrap prompt. They are the guided, conversational interface for maintaining the repository: `personal-profile`, `complete-profile`, `reflect`, `setup-agent`, `localize`, `import`, and `upgrade`. Each skill reads the repo path from `.pbg/settings.yml` `repo_path` and writes user data in `preferred_language`.
+- **MCP server** (`mcp/`) is the daily cross-project bridge. It reads the repo path from `PERSONAL_BACKGROUND_DIR` (falling back to `~/personal-background`) and never reads `raw/private/`. Use it for fast reads and writes from any MCP client.
+
+## File ownership contract
+
+Framework-owned files (the kit may update these):
+
+- `kit/`, `bootstrap/`, `mcp/`
+- `AGENTS.md`, `README.md`, `README.zh.md`, `methodology.md`, `docs/`, `LICENSE`
+
+User-owned files (never overwrite unless explicitly asked):
+
+- `profile.md`, `preferences.md`, `constraints.md`
+- `episodes/`, `notes/`, `raw/`, `archive/`
+- `.pbg/`, `index/`
+
 ## Privacy and boundaries
 
 - `raw/private/` is gitignored and may contain sensitive documents. Do not reference them unless explicitly asked.
+- Never read `raw/private/` through the MCP server.
 - Do not commit unencrypted sensitive personal data.
 - When in doubt, ask the user before writing or sharing personal context.

@@ -1,77 +1,79 @@
 # Personal Background
 
-A lightweight, local-first, markdown-based personal background management system. Helps AI agents understand who you are, how you make decisions, and what constraints you operate under.
+A local-first, markdown-based personal background kit and data home. It gives AI agents persistent context about who you are, how you make decisions, and what boundaries you operate under, without locking your data into any tool.
 
 [中文版本](README.zh.md)
-
-## What This Solves
-
-AI agents start every conversation with no memory. This leads to repeated questions, generic advice, and decisions that ignore your values and constraints. This repository stores your personal context in plain markdown so agents can make better decisions across projects.
 
 ## Quick Start
 
 1. Clone this repo to a location of your choice.
-2. Run `scripts/init.sh` or copy the templates to the root files.
-3. Fill out `profile.md`, `preferences.md`, and `constraints.md`.
-4. Tell your AI agent to read this repo when making decisions that affect you.
-
-## Core Design
-
-- **Local-first**: plain markdown + YAML frontmatter, no database or vector store required.
-- **Privacy-friendly**: sensitive materials go to `raw/private/` and are gitignored by default.
-- **Unified core**: `profile.md`, `preferences.md`, and `constraints.md` are the stable source of truth; `episodes/` and `notes/` capture events and observations.
-- **AI-driven maintenance**: Factory Droid skills (`complete-profile`, `personal-profile`, `reflect`, `setup-agent`) help you create, update, consolidate, and port your background.
-- **Cross-agent**: `AGENTS.md` and `CLAUDE.md` are read by Claude, Codex, and other compatible agents.
+2. Open the repo in your AI agent and paste the entire contents of [`bootstrap/PROMPT.md`](bootstrap/PROMPT.md).
+3. The agent will scaffold your data files, install the skills, and register the MCP server.
+4. Start using `complete-profile` for guided onboarding, or just say "remember this" to capture an episode or note.
 
 ## Repository Structure
 
 ```text
 personal-background/
-├── AGENTS.md                 # Cross-tool entry point
-├── CLAUDE.md                 # Claude-specific adapter
-├── methodology.md            # Personal background management methodology
+├── kit/                    # Framework: manifest, templates, skills
+│   ├── manifest.yml
+│   ├── config/settings.example.yml
+│   ├── templates/          # Data file templates
+│   └── skills/             # Installable skills for agents
+├── bootstrap/              # The canonical bootstrap prompt
+├── mcp/                    # First-class MCP server (runs TS directly via bun)
 │
-├── profile.md                # Stable identity
-├── preferences.md            # Decision preferences
-├── constraints.md            # Hard constraints
+├── AGENTS.md               # Cross-agent entry point
+├── methodology.md          # Background management methodology
+├── README.md / README.zh.md
+├── LICENSE
 │
-├── episodes/                 # Timestamped experiences
-├── notes/                    # Free-form observations
-├── raw/                      # Raw materials
-│   ├── public/               # Safe for git
-│   └── private/              # Gitignored by default
-│
-├── templates/                # Templates for new users
-├── archive/                  # Archive for outdated entries
-│
-├── .factory/skills/          # Factory Droid skills
-│   ├── complete-profile/     # Guided onboarding / profile completion
-│   ├── personal-profile/     # Update personal background
-│   ├── reflect/              # Merge episodes/notes into core
-│   └── setup-agent/          # Generate adapter files for other agents
-├── scripts/                  # Helper scripts
-├── hooks/                    # Optional Claude Code hook
-└── mcp/                      # Optional MCP server
+├── profile.md              # Stable identity (user-owned)
+├── preferences.md          # Decision preferences (user-owned)
+├── constraints.md          # Hard constraints (user-owned)
+├── episodes/               # Timestamped experiences (user-owned)
+├── notes/                  # Free-form observations (user-owned)
+├── raw/                    # Raw materials
+│   ├── public/             # Safe for git
+│   └── private/            # Gitignored; never read by the MCP server
+├── archive/                # Outdated entries
+└── .pbg/                   # Gitignored runtime config (created by bootstrap)
 ```
 
-## How Agents Use This
+## File Ownership Contract
 
-When an agent works with you, it should read:
+Framework-owned files (read and updated by the kit, never by the user's personal data):
 
-- `profile.md` for stable identity
-- `preferences.md` for decision style and values
-- `constraints.md` for non-negotiable boundaries
-- `episodes/` and `notes/` for recent context and specific events
+- `kit/`, `bootstrap/`, `mcp/`
+- `AGENTS.md`, `README.md`, `README.zh.md`, `methodology.md`, `docs/`, `LICENSE`
 
-## Sync & Backup
+User-owned files (never overwritten by any tool unless you explicitly approve):
 
-For cross-device access, use a private GitHub repository. Core files work fully offline; git is only a sync layer.
+- `profile.md`, `preferences.md`, `constraints.md`
+- `episodes/`, `notes/`, `raw/`, `archive/`
+- `.pbg/`, `index/`
+
+The `upgrade` skill respects this boundary and only touches framework-owned paths.
+
+## Two Access Surfaces
+
+1. **MCP bridge** (`mcp/`) for daily cross-project use: read and write background from any project that speaks MCP. The server reads the repo path from `PERSONAL_BACKGROUND_DIR` and never reads `raw/private/`.
+2. **Skills** (`kit/skills/`) for guided maintenance: `personal-profile`, `complete-profile`, `reflect`, `setup-agent`, `localize`, `import`, and `upgrade`. The bootstrap prompt installs these into your agent.
 
 ## Language
 
-- Project files (`README.md`, `methodology.md`, skills, scripts) are in English.
-- Your personal data files (`profile.md`, `preferences.md`, `constraints.md`, `episodes/`, `notes/`) can be in any language you prefer.
-- Use ASCII slugs for filenames (`YYYY-MM-DD-short-slug.md`). The body can be in your preferred language.
+- Framework files are in English and are the canonical source.
+- User data is written in the `preferred_language` stored in `.pbg/settings.yml`.
+- Use the `localize` skill to produce translated copies of framework docs (e.g. `README.zh.md`) or, with your explicit confirmation, to convert your user data to another language.
+- Filenames stay ASCII (`YYYY-MM-DD-short-slug.md`); the body can be in your preferred language.
+
+## Sync & Backup
+
+Use a private git repository or any markdown-compatible sync. The core design is local-first; git is just a sync layer.
+
+## Upgrade
+
+Never run a blind `git pull` over your data. Use the `upgrade` skill to apply upstream kit changes with a consent-gated, reasoned merge of framework-owned files only.
 
 ## License
 

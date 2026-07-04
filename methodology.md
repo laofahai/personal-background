@@ -155,3 +155,18 @@ Users tend to embellish or exaggerate their experiences. When maintaining the re
 - Don't over-automate: build manual habits first, then gradually add automation.
 - Don't put everything in one file: use layers to keep signals high.
 - Don't embellish: avoid unsupported adjectives; use verifiable facts and numbers.
+
+## Tooling & Ownership
+
+### Access surfaces
+
+Two interfaces read and write the same markdown data home:
+
+1. **MCP bridge** (`mcp/`) — for daily cross-project use. Any MCP client can read core files, search the background, and add episodes or notes. The server reads the repo path from `PERSONAL_BACKGROUND_DIR` and never reads `raw/private/`.
+2. **Skills** (`kit/skills/`) — for guided maintenance. They are installed by the bootstrap prompt and handle tasks like completing the profile, reflecting on notes, importing external markdown, localizing, and upgrading the kit. Skills read the repo path from `.pbg/settings.yml` and write user data in `preferred_language`.
+
+Markdown is the only source of truth; both surfaces are views over it.
+
+### Upgrades
+
+The repo is both a kit and a data home. Framework-owned files (`kit/`, `bootstrap/`, `mcp/`, `AGENTS.md`, `README.md`, `methodology.md`, `docs/`, `LICENSE`) can be updated from upstream, but user-owned files (`profile.md`, `preferences.md`, `constraints.md`, `episodes/`, `notes/`, `raw/`, `archive/`, `.pbg/`, `index/`) must never be overwritten automatically. Use the `upgrade` skill for a consent-gated, reasoned merge of framework-owned files only.
