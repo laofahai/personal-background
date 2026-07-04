@@ -6,9 +6,9 @@
 
 ## 快速开始
 
-1. 将本仓库 clone 到你选择的位置。
+1. **先将本仓库 fork 到你自己的私有账号**（它将成为你的个人数据主场；永远不要向公共上游推送私人数据），然后再 clone 你的 fork。
 2. 在 AI agent 中打开本仓库，并粘贴 [`bootstrap/PROMPT.md`](bootstrap/PROMPT.md) 的全部内容。
-3. agent 会帮你创建数据文件、安装技能并注册 MCP server。
+3. agent 会先询问你的偏好语言，然后创建数据文件、安装技能并注册 MCP server。
 4. 使用 `complete-profile` 进行引导式初始化，或者直接说“记住这件事”来记录一条 episode 或 note。
 
 ## 仓库结构
@@ -73,7 +73,7 @@ personal-background/
 
 ## 升级
 
-不要对你的数据执行盲目的 `git pull`。使用 `upgrade` 技能，在上游套件更新时只对框架所有文件进行带确认、带推理的合并。
+不要对你的数据执行盲目的 `git pull`。使用 `upgrade` 技能，在上游套件更新时只对框架所有文件进行带确认、带推理的合并。为了让升级顺畅，建议把原始模板仓库保留为名为 `upstream` 的 git remote（如果缺少，该技能可以帮你添加）。
 
 ## 许可证
 

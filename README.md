@@ -6,9 +6,9 @@ A local-first, markdown-based personal background kit and data home. It gives AI
 
 ## Quick Start
 
-1. Clone this repo to a location of your choice.
+1. **Fork this repo to your own private account** (it will become your personal data home; never push private data to the public upstream). Then clone your fork.
 2. Open the repo in your AI agent and paste the entire contents of [`bootstrap/PROMPT.md`](bootstrap/PROMPT.md).
-3. The agent will scaffold your data files, install the skills, and register the MCP server.
+3. The agent will ask for your preferred language first, then scaffold your data files, install the skills, and register the MCP server.
 4. Start using `complete-profile` for guided onboarding, or just say "remember this" to capture an episode or note.
 
 ## Repository Structure
@@ -73,7 +73,7 @@ Use a private git repository or any markdown-compatible sync. The core design is
 
 ## Upgrade
 
-Never run a blind `git pull` over your data. Use the `upgrade` skill to apply upstream kit changes with a consent-gated, reasoned merge of framework-owned files only.
+Never run a blind `git pull` over your data. Use the `upgrade` skill to apply upstream kit changes with a consent-gated, reasoned merge of framework-owned files only. For this to work smoothly, keep the original template repo as a git remote named `upstream` (the skill can add it for you if it is missing).
 
 ## License
 

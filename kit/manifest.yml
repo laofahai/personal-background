@@ -1,8 +1,13 @@
 # Manifest for the personal-background kit.
 # The upgrade skill compares kit_version here (upstream) against
 # .pbg/settings.yml kit_version (installed) to decide what to merge.
-kit_version: "2.0.0"
+kit_version: "2.0.1"
 changelog:
+  - version: "2.0.1"
+    date: "2026-07-04"
+    notes:
+      - "Recommend forking the repo as your private data home."
+      - "Bootstrap prompt asks for preferred language first."
   - version: "2.0.0"
     date: "2026-07-04"
     notes:
