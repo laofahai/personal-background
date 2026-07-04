@@ -1,6 +1,6 @@
 # Personal Background（个人背景）
 
-一个本地优先、基于 markdown 的个人背景套件与数据主场。它为 AI agent 提供关于你是谁、如何做决策、以及受哪些约束的持久上下文，同时不会把你的数据锁定在任何工具里。
+一个本地优先、基于 markdown 的个人背景套件与数据主场。它为 AI agent 提供关于你是谁、如何做决策、以及受哪些约束的持久上下文，同时不会把你的数据锁定在任何工具里。设计上通过 AI agent（技能 + MCP）使用，直接编辑文件只是可选的 fallback。
 
 [English version](README.md)
 

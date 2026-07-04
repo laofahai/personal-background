@@ -4,15 +4,18 @@
   "description": "MCP bridge for the personal-background markdown data home",
   "type": "module",
   "scripts": {
-    "start": "bun run src/server.ts",
-    "typecheck": "bunx tsc --noEmit",
-    "test": "bun test"
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "start:bun": "bun run src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
   }
 }

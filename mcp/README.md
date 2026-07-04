@@ -2,7 +2,7 @@
 
 First-class MCP bridge for the personal-background markdown data home. It lets any MCP client (Droid, Claude Desktop, Cursor, etc.) read and write the user's background from any project.
 
-The server runs TypeScript directly via Bun; there is no build step and no `dist/` directory.
+The server supports both Node and Bun. Use the `start` script with Node after building (`npm run build`), or use `start:bun` to run TypeScript directly with Bun (no build step).
 
 ## Configuration
 
@@ -10,7 +10,21 @@ Point the server at the repo with the `PERSONAL_BACKGROUND_DIR` environment vari
 
 ## Registration (Droid)
 
+**With Node (default):**
+
 ```bash
+cd /path/to/personal-background/mcp && npm install && npm run build
+
+droid mcp add personal-background \
+  --env PERSONAL_BACKGROUND_DIR=/path/to/personal-background \
+  -- node /path/to/personal-background/mcp/dist/server.js
+```
+
+**With Bun (faster, no build step):**
+
+```bash
+cd /path/to/personal-background/mcp && bun install
+
 droid mcp add personal-background \
   --env PERSONAL_BACKGROUND_DIR=/path/to/personal-background \
   -- bun /path/to/personal-background/mcp/src/server.ts
@@ -31,17 +45,29 @@ Adapt the command to your agent's MCP registration format if you are not using D
 
 ## Running
 
+**Node:**
+
+```bash
+cd mcp
+npm install
+npm run build
+npm start
+```
+
+**Bun:**
+
 ```bash
 cd mcp
 bun install
-bun run start
+bun run start:bun
 ```
 
 ## Development
 
 ```bash
-bun test
-bun run typecheck
+cd mcp
+npm test          # or: bun run test
+npm run typecheck # or: bun run typecheck
 ```
 
 ## Privacy

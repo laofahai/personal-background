@@ -1,6 +1,6 @@
 # Personal Background
 
-A local-first, markdown-based personal background kit and data home. It gives AI agents persistent context about who you are, how you make decisions, and what boundaries you operate under, without locking your data into any tool.
+A local-first, markdown-based personal background kit and data home. It gives AI agents persistent context about who you are, how you make decisions, and what boundaries you operate under, without locking your data into any tool. Designed to be used through AI agents (skills + MCP), with direct file editing as an optional fallback.
 
 [中文版本](README.zh.md)
 

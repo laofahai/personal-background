@@ -1,8 +1,14 @@
 # Manifest for the personal-background kit.
 # The upgrade skill compares kit_version here (upstream) against
 # .pbg/settings.yml kit_version (installed) to decide what to merge.
-kit_version: "2.0.1"
+kit_version: "2.0.2"
 changelog:
+  - version: "2.0.2"
+    date: "2026-07-04"
+    notes:
+      - "MCP server supports both Node and Bun runtimes."
+      - "complete-profile skill can offer to search public entities with consent."
+      - "AGENTS.md/README emphasize AI-first usage."
   - version: "2.0.1"
     date: "2026-07-04"
     notes:

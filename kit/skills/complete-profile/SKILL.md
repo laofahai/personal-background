@@ -33,11 +33,12 @@ user-invocable: true
 1. Identify empty or placeholder sections in the core files. Markers include `_to fill_`, blank bullets, or sections with only headers.
 2. Pick one high-priority section to start with. Recommended order: Identity → Work → Goals → Preferences → Constraints.
 3. Ask the user a focused, conversational question to fill that section.
-4. If the user gives a detailed story or event, propose creating an `episodes/` file plus a concise summary in the core file.
-5. If the user gives a preference or observation, propose updating `preferences.md` or creating a `notes/` file.
-6. Present the proposed changes and wait for explicit confirmation before writing.
-7. Update the file(s), preserving structure and updating `last_updated` on modified core files.
-8. Report what changed and ask if the user wants to continue to the next section.
+4. If the user mentions an external entity (company, school, product, project, certification, etc.) and you can improve accuracy with public facts, **offer** to search for publicly available information about it (e.g. full legal name of a company, official school name, public project URL). Only do this if the user agrees; never search for private personal details.
+5. If the user gives a detailed story or event, propose creating an `episodes/` file plus a concise summary in the core file.
+6. If the user gives a preference or observation, propose updating `preferences.md` or creating a `notes/` file.
+7. Present the proposed changes and wait for explicit confirmation before writing.
+8. Update the file(s), preserving structure and updating `last_updated` on modified core files.
+9. Report what changed and ask if the user wants to continue to the next section.
 
 ## Question strategy
 

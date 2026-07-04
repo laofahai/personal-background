@@ -21,10 +21,11 @@ git-synced markdown data home. Do the following, asking me for confirmation befo
 5. Detect which agent you are (Factory/Claude/Codex/Cursor/...). Install each skill in
    `kit/skills/*/SKILL.md` into this agent's skill directory. Where a skill references
    the repo path, it reads `.pbg/settings.yml` `repo_path`, so no path hardcoding is needed.
-6. Register the MCP server so I can read/write my background from ANY project:
-   - Install deps: `cd mcp && bun install` (no build step; bun runs the TS server directly)
-   - Register with env `PERSONAL_BACKGROUND_DIR=<repo_path>` pointing to this repo, e.g.
+6. Register the MCP server so I can read/write my background from ANY project. Choose the runtime I have installed:
+   - **Bun (no build step):** `cd mcp && bun install`, then
      `droid mcp add personal-background --env PERSONAL_BACKGROUND_DIR=<repo_path> -- bun <repo_path>/mcp/src/server.ts`
+   - **Node:** `cd mcp && npm install && npm run build`, then
+     `droid mcp add personal-background --env PERSONAL_BACKGROUND_DIR=<repo_path> -- node <repo_path>/mcp/dist/server.js`
    - Adapt the command to my actual agent if different.
 7. Tell me I can now either run the `complete-profile` skill for guided onboarding, or
    just talk to you and say "remember this" to capture episodes/notes.
