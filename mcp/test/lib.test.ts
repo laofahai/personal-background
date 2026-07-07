@@ -4,6 +4,13 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { createRepo, isCoreName, CORE_NAMES, ENTRY_FILENAME_RE } from "../src/lib.js";
 
+function today(): string {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
 let root: string;
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), "pb-"));
@@ -43,6 +50,41 @@ describe("Repo", () => {
   it("adds an entry", () => {
     createRepo(root).addEntry("notes", "2026-03-01-x.md", "prefers tests first");
     expect(readFileSync(join(root, "notes", "2026-03-01-x.md"), "utf-8")).toContain("tests first");
+  });
+  it("appends core content and updates last_updated", () => {
+    writeFileSync(join(root, "profile.md"), "---\ntype: profile\nlast_updated: 2000-01-01\n---\n# Profile\n");
+    const result = createRepo(root).appendCore("profile", "## Work\n- Builds MCP tools");
+    const content = readFileSync(join(root, "profile.md"), "utf-8");
+
+    expect(content).toContain(`last_updated: ${today()}`);
+    expect(content).toContain("## Work\n- Builds MCP tools");
+    expect(result).toMatchObject({ modified: "profile.md", mode: "append", last_updated: today(), frontmatterUpdated: true });
+  });
+  it("adds last_updated frontmatter when a core file has none", () => {
+    writeFileSync(join(root, "constraints.md"), "# Constraints\nKeep changes small.");
+    createRepo(root).appendCore("constraints", "## Tools\n- No raw/private writes");
+    const content = readFileSync(join(root, "constraints.md"), "utf-8");
+
+    expect(content.startsWith(`---\nlast_updated: ${today()}\n---\n`)).toBe(true);
+    expect(content).toContain("# Constraints");
+  });
+  it("adds last_updated to existing core frontmatter when missing", () => {
+    writeFileSync(join(root, "preferences.md"), "---\ntype: preferences\n---\n# Preferences\n");
+    createRepo(root).appendCore("preferences", "## Communication\n- Concise");
+    const content = readFileSync(join(root, "preferences.md"), "utf-8");
+
+    expect(content.startsWith(`---\ntype: preferences\nlast_updated: ${today()}\n---\n`)).toBe(true);
+    expect(content).toContain("## Communication\n- Concise");
+  });
+  it("upserts a core section without duplicating the heading", () => {
+    writeFileSync(join(root, "profile.md"), "---\ntype: profile\nlast_updated: 2000-01-01\n---\n# Profile\n\n## Work\n- Old\n\n## Skills\n- TypeScript\n");
+    const result = createRepo(root).appendCore("profile", "- New", "## Work");
+    const content = readFileSync(join(root, "profile.md"), "utf-8");
+
+    expect(content).toContain("## Work\n\n- New\n\n## Skills");
+    expect(content).not.toContain("- Old");
+    expect(content.match(/^## Work$/gm)?.length).toBe(1);
+    expect(result).toMatchObject({ modified: "profile.md", mode: "upsert", sectionHeading: "## Work", sectionExisted: true });
   });
   it("flags private paths", () => {
     expect(createRepo(root).isPrivatePath("raw/private/secret.md")).toBe(true);

@@ -12,6 +12,15 @@ export interface SearchHit { file: string; line: number; text: string; matchType
 
 export const ENTRY_FILENAME_RE = /^\d{4}-\d{2}-\d{2}-[a-z0-9-]+\.md$/;
 
+export interface AppendCoreResult {
+  modified: string;
+  mode: "append" | "upsert";
+  frontmatterUpdated: boolean;
+  last_updated: string;
+  sectionHeading?: string;
+  sectionExisted?: boolean;
+}
+
 export interface Repo {
   root: string;
   readCore(name: CoreName): string;
@@ -19,8 +28,57 @@ export interface Repo {
   listRecent(kind: "episodes" | "notes", n: number): string[];
   searchBackground(query: string, limit?: number): SearchHit[];
   addEntry(kind: "episodes" | "notes", filename: string, content: string): void;
+  appendCore(name: CoreName, content: string, sectionHeading?: string): AppendCoreResult;
   isPrivatePath(rel: string): boolean;
   isValidEntryFilename(filename: string): boolean;
+}
+
+function today(): string {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+function withLastUpdated(content: string): { content: string; updated: boolean; last_updated: string } {
+  const last_updated = today();
+  const match = content.match(/^(---\r?\n)([\s\S]*?)(\r?\n---[ \t]*(?:\r?\n|$))/);
+  if (!match) {
+    return { content: `---\nlast_updated: ${last_updated}\n---\n${content}`, updated: true, last_updated };
+  }
+
+  const [, open, body, close] = match;
+  const nextBody = /^last_updated\s*:/m.test(body)
+    ? body.replace(/^last_updated\s*:.*$/m, `last_updated: ${last_updated}`)
+    : `${body}${body.endsWith("\n") ? "" : "\n"}last_updated: ${last_updated}`;
+  return {
+    content: `${open}${nextBody}${close}${content.slice(match[0].length)}`,
+    updated: nextBody !== body,
+    last_updated,
+  };
+}
+
+function upsertSection(content: string, sectionHeading: string, body: string): { content: string; existed: boolean } {
+  const heading = sectionHeading.trim();
+  const headingMatch = heading.match(/^(#{1,6})\s+\S/);
+  if (!headingMatch) throw new Error("section_heading must be a Markdown heading, e.g. ## Work");
+
+  const level = headingMatch[1].length;
+  const block = body.trimStart().startsWith(heading) ? body.trimEnd() : `${heading}\n\n${body.trimEnd()}`;
+  const lines = content.split("\n");
+  const start = lines.findIndex((line) => line.trim() === heading);
+  if (start === -1) return { content: `${content.trimEnd()}\n\n${block}\n`, existed: false };
+
+  let end = lines.length;
+  const nextHeading = new RegExp(`^#{1,${level}}\\s+\\S`);
+  for (let i = start + 1; i < lines.length; i++) {
+    if (nextHeading.test(lines[i].trim())) {
+      end = i;
+      break;
+    }
+  }
+  lines.splice(start, end - start, ...`${block}\n`.split("\n"));
+  return { content: `${lines.join("\n").trimEnd()}\n`, existed: true };
 }
 
 export function createRepo(rootInput: string): Repo {
@@ -111,5 +169,25 @@ export function createRepo(rootInput: string): Repo {
     writeFileSync(join(dir, filename), content, "utf-8");
   };
 
-  return { root, readCore, readEntry, listRecent, searchBackground, addEntry, isPrivatePath, isValidEntryFilename };
+  const appendCore = (name: CoreName, content: string, sectionHeading?: string): AppendCoreResult => {
+    if (!isCoreName(name)) throw new Error(`Invalid core file: ${name}`);
+    const p = join(root, `${name}.md`);
+    const prev = existsSync(p) ? readFileSync(p, "utf-8") : "";
+    const frontmatter = withLastUpdated(prev);
+    const heading = sectionHeading?.trim();
+    const result = heading
+      ? upsertSection(frontmatter.content, heading, content)
+      : { content: `${frontmatter.content.trimEnd()}\n\n${content.trimEnd()}\n`, existed: undefined };
+
+    writeFileSync(p, result.content, "utf-8");
+    return {
+      modified: `${name}.md`,
+      mode: heading ? "upsert" : "append",
+      frontmatterUpdated: frontmatter.updated,
+      last_updated: frontmatter.last_updated,
+      ...(heading ? { sectionHeading: heading, sectionExisted: result.existed } : {}),
+    };
+  };
+
+  return { root, readCore, readEntry, listRecent, searchBackground, addEntry, appendCore, isPrivatePath, isValidEntryFilename };
 }

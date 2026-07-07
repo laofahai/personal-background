@@ -2,9 +2,9 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { readFileSync, writeFileSync, existsSync } from "fs";
-import { join, resolve } from "path";
-import { createRepo, CoreName, isCoreName, ENTRY_FILENAME_RE } from "./lib.js";
+import { readFileSync, existsSync } from "fs";
+import { resolve } from "path";
+import { createRepo, isCoreName } from "./lib.js";
 
 function loadRepoPath(): string {
   if (process.env.PERSONAL_BACKGROUND_DIR) {
@@ -186,7 +186,7 @@ const tools = [
   {
     name: "append_core",
     title: "Append to core file",
-    description: "Append content to profile.md, preferences.md, or constraints.md under a section header. This adds text; it does not replace the whole file.",
+    description: "Append content to profile.md, preferences.md, or constraints.md. If section_heading is provided, replace that section or append it if missing.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -198,6 +198,10 @@ const tools = [
         content: {
           type: "string" as const,
           description: "Markdown text to append. Usually include a section header (e.g. ## Work) and concise bullets.",
+        },
+        section_heading: {
+          type: "string" as const,
+          description: "Optional Markdown heading to upsert, e.g. ## Work. When present, content replaces that section instead of appending a duplicate.",
         },
       },
       required: ["file", "content"],
@@ -264,10 +268,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!isCoreName(file)) {
           return err(`Invalid core file: ${file}. Must be one of: profile, preferences, constraints.`);
         }
-        const p = join(ROOT, `${file}.md`);
-        const prev = existsSync(p) ? readFileSync(p, "utf-8") : "";
-        writeFileSync(p, `${prev}\n\n${a.content as string}\n`, "utf-8");
-        return ok({ appendedTo: `${file}.md` });
+        return ok(repo.appendCore(file, a.content as string, a.section_heading as string | undefined));
       }
       default:
         return err(`Unknown tool: ${name}`);
